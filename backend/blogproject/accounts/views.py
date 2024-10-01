@@ -1,13 +1,22 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, permissions
+from rest_framework import status, permissions,viewsets
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User,BlogPost
-from .serializers import UserSerializer,BlogPostSerializer,ProfileSerializer
+from .models import User,BlogPost,Profile
+from .serializers import UserSerializer,PostSerializer,ProfileSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import OutstandingToken, BlacklistedToken
+from rest_framework.decorators import api_view
+from django.contrib.auth import logout
+from rest_framework import generics
+from rest_framework.permissions import AllowAny
+from rest_framework.generics import ListAPIView
+from rest_framework.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404
+
 class RegisterView(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
@@ -40,90 +49,102 @@ class LoginView(APIView):
         refresh = RefreshToken.for_user(user)
         return Response({
             'user': {
+                'id': user.id,
                 'email': user.email,  # You can add more user data as needed
-                'name': user.username  # Assuming username is the name field
+                'name': user.name
             },
             'token': str(refresh.access_token)  # Change this line to 'token'
         })
         
-class ProfileView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request):
-        profile = request.user.profile  # Assuming a one-to-one relation with User
-        serializer = ProfileSerializer(profile)
-        return Response(serializer.data)
+class ProfileListView(generics.ListAPIView):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]  # Require authentication to access this view
 
-    def patch(self, request):
-        profile = request.user.profile
-        serializer = ProfileSerializer(profile, data=request.data, partial=True)
+    def get_object(self):
+        # Fetch the profile instance based on the authenticated user
+        return Profile.objects.get(user=self.request.user).first()
+
+    def patch(self, request, *args, **kwargs):
+        # Fetch the profile instance for the authenticated user
+        profile_instance = self.get_object()
+
+        if not profile_instance:
+            return Response({'detail': 'Profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(profile_instance, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'Profile updated successfully!', 'data': serializer.data})
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class BlogPostListCreateView(APIView):
+class PostCreateView(APIView):
     permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        posts = BlogPost.objects.all()
-        serializer = BlogPostSerializer(posts, many=True)
-        return Response(serializer.data)
 
     def post(self, request):
-        serializer = BlogPostSerializer(data=request.data)
+        print(request.data)  # Print the incoming data
+        
+        # Serialize the incoming data
+        serializer = PostSerializer(data=request.data)
+        
         if serializer.is_valid():
+            # Save the post and set the user as the current authenticated user
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-from rest_framework.pagination import PageNumberPagination
+        else:
+            print(serializer.errors)  # Print validation errors
+            # Return validation errors if the data is invalid
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class BlogPostPagination(PageNumberPagination):
-    page_size = 10  # Number of posts per page
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+    page_size = 4  # Number of posts per page
+    page_size_query_param = 'page_size'  # Optional: allows clients to set the page size
+    max_page_size = 100  # Optional: limits the maximum page size
 
-class BlogPostListCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+class BlogPostListView(ListAPIView):
+    queryset = BlogPost.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [AllowAny]  # Allows unauthenticated users to view posts
     pagination_class = BlogPostPagination
-
-    def get(self, request):
-        posts = BlogPost.objects.all()
-        paginator = self.pagination_class()
-        paginated_posts = paginator.paginate_queryset(posts, request)
-        serializer = BlogPostSerializer(paginated_posts, many=True)
-        return paginator.get_paginated_response(serializer.data)
     
-class BlogPostDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+class BlogPostDetailView(generics.RetrieveAPIView):
+    queryset = BlogPost.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [AllowAny]  # Allows unauthenticated users to view the post
+    lookup_field = 'id'    
 
-    def get(self, request, pk):
-        try:
-            post = BlogPost.objects.get(pk=pk)
-        except BlogPost.DoesNotExist:
-            return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+class UpdateBlogPostView(APIView):
+    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
 
-        serializer = BlogPostSerializer(post)
-        return Response(serializer.data)
-
-    def patch(self, request, pk):
-        post = BlogPost.objects.get(pk=pk)
-        if post.user != request.user:
-            return Response({"error": "You can only edit your own posts."}, status=status.HTTP_403_FORBIDDEN)
-        serializer = BlogPostSerializer(post, data=request.data, partial=True)
+    def put(self, request, pk):
+        post = get_object_or_404(BlogPost, pk=pk)
+        
+        # Check if the authenticated user is the author of the post
+        if post.author != request.user:
+            return Response({"detail": "You do not have permission to update this post."}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Update the post with the new data
+        serializer = PostSerializer(post, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class DeleteBlogPostView(APIView):
+    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+
     def delete(self, request, pk):
-        try:
-            post = BlogPost.objects.get(pk=pk)
-        except BlogPost.DoesNotExist:
-            return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+        post = get_object_or_404(BlogPost, pk=pk)
         
-        if post.user != request.user:
-            return Response({"error": "You can only delete your own posts."}, status=status.HTTP_403_FORBIDDEN)
+        # Check if the authenticated user is the author of the post
+        if post.author != request.user:
+            return Response({"detail": "You do not have permission to delete this post."}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Delete the post
         post.delete()
-        return Response({"message": "Post deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+class LogoutView(APIView):
+    def post(self, request):
+        logout(request)
+        return Response(status=status.HTTP_204_NO_CONTENT)

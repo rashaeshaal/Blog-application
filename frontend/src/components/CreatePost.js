@@ -1,69 +1,96 @@
 import React, { useState } from 'react';
-import { createBlogPost } from '../api'; // Adjust the import path if necessary
+import axios from 'axios';
+import { useUser } from '../context/UserContext';
 
-const CreatePost = () => {
-  const [formData, setFormData] = useState({ title: '', content: '', tags: '' });
-  const [error, setError] = useState(null);
+const CreatePost = ({ onPostCreated }) => { // Accept onPostCreated as a prop
+  const { user } = useUser();
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [tags, setTags] = useState('');
+  const [image, setImage] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(null); // Clear error message on input change
-  };
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    setSuccessMessage('');
-
+  
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('content', content);
+    formData.append('tags', tags);
+    if (image) {
+      formData.append('image', image);
+    }
+  
     try {
-      const response = await createBlogPost(formData);
+      await axios.post(
+        'http://localhost:8000/api/accounts/posts/',
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${user.token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
       setSuccessMessage('Post created successfully!');
-      setFormData({ title: '', content: '', tags: '' }); // Reset the form
-    } catch (err) {
-      setError('Failed to create the post. Please try again.');
-      console.error(err);
+      onPostCreated(); // Notify the parent to refetch posts
+      setTitle('');
+      setContent('');
+      setTags('');
+      setImage(null);
+    } catch (error) {
+      setErrorMessage('Failed to create post. Please try again.');
+      console.error('Failed to create post:', error.response?.data);
     }
   };
-
+  
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold">Create Blog Post</h2>
-      {error && <p className="text-red-500">{error}</p>}
-      {successMessage && <p className="text-green-500">{successMessage}</p>}
+    <div className="container mx-auto p-8 bg-white rounded-lg shadow-lg">
+      <h1 className="text-3xl font-semibold mb-6">Create a New Post</h1>
+      {successMessage && <div className="text-green-500 mb-4">{successMessage}</div>}
+      {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Title:</label>
           <input
             type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-md p-2"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             required
+            className="border border-gray-300 rounded-lg p-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Content:</label>
           <textarea
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-md p-2"
+            placeholder="Content"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
             required
+            className="border border-gray-300 rounded-lg p-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            rows="6"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Tags:</label>
           <input
             type="text"
-            name="tags"
-            value={formData.tags}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-md p-2"
+            placeholder="Tags (optional)"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            className="border border-gray-300 rounded-lg p-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           />
         </div>
-        <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded-md">
+        <div>
+          <input
+            type="file"
+            onChange={(e) => setImage(e.target.files[0])}
+            className="border border-gray-300 rounded-lg p-4 w-full"
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105"
+        >
           Create Post
         </button>
       </form>

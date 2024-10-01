@@ -4,21 +4,20 @@ from django.core.exceptions import ValidationError
 
 
 
-
 class ProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
-    email = serializers.EmailField(source='user.email', read_only=True)
-
     class Meta:
         model = Profile
-        fields = ['profile_picture', 'username', 'email'] 
+        fields = ['name','profile_picture']
+    
+        
+         
 
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('name', 'email', 'password')  # Add 'name' to fields
+        fields = ('id','name', 'email', 'password')  # Add 'name' to fields
         extra_kwargs = {
             'password': {'write_only': True},  # Ensure password is write-only
         }
@@ -36,7 +35,8 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
 
-class BlogPostSerializer(serializers.ModelSerializer):
+class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlogPost
-        fields = ['id', 'user', 'title', 'content', 'tags', 'created_at', 'updated_at']
+        fields = ['id', 'user', 'title','image', 'content', 'tags', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'created_at']

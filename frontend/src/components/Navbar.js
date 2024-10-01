@@ -6,12 +6,13 @@ const Navbar = () => {
   const { user, setUser } = useUser(); // Get user and setUser from context
   const navigate = useNavigate();
   console.log('User in Navbar:', user); 
+  
 
   const handleLogout = () => {
     setUser(null); // Clear user state on logout
     localStorage.removeItem('user'); // Clear user data from local storage
     localStorage.removeItem('token'); // Clear the token
-    navigate('/login'); // Redirect to login page after logout
+    navigate('/login'); // Redirect to the login page after logout
   };
 
   return (
@@ -24,8 +25,8 @@ const Navbar = () => {
         <div className="space-x-4">
           {user ? (
             <>
-              <span className="text-gray-300">Hi, {user.name}</span>
-              <Link to="/profile" className="text-gray-300 hover:text-white">Profile</Link>
+              <span className="text-gray-300">Hi, {user.user.name}</span>
+              <Link to={`/profile/${user.id}`} className="text-gray-300 hover:text-white">Profile</Link> {/* Pass user ID as URL param */}
               <Link to="/create-post" className="text-gray-300 hover:text-white">Create Post</Link>
               <button onClick={handleLogout} className="text-gray-300 hover:text-white">
                 Logout

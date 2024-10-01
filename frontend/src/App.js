@@ -9,7 +9,7 @@ import Navbar from './components/Navbar';
 import BlogPosts from './components/BlogPosts'; 
 import { UserProvider } from './context/UserContext';
 import CreatePost from './components/CreatePost'; 
-
+import UpdatePost from './pages/UpdatePost';
 function App() {
   return (
     <UserProvider> {/* Wrap your application with UserProvider */}
@@ -21,7 +21,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/posts" element={<BlogPosts />} /> {/* Display BlogPosts on /posts */}
             <Route path="/posts/:id" element={<SinglePost />} />
-            <Route path="/profile" element={<Profile />} /> {/* Corrected route for Profile */}
+            <Route path="/posts/:id/update" element={<UpdatePost />} />
+            <Route path="/profile/:userId" element={<Profile />} /> {/* Corrected route for Profile */}
             <Route path="/create-post" element={<CreatePost />} />
             <Route path="/login" element={<Login />} />  {/* Route for Login */}
             <Route path="/register" element={<Register />} />  {/* Route for Register */}

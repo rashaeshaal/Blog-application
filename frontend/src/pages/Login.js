@@ -4,21 +4,17 @@ import { useUser } from '../context/UserContext'; // Import the User context
 import axios from 'axios';
 
 const Login = () => {
-  const { setUser } = useUser();
+  const { login } = useUser();  // Use the login function from context
   const navigate = useNavigate();
-
-  // State for form data and error handling
+   
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // Handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError(null); // Clear error message on input change
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -26,31 +22,21 @@ const Login = () => {
 
     try {
       const response = await axios.post('http://localhost:8000/api/accounts/handlelogin/', formData);
-      
-      // Log the entire response object to debug
-      console.log('API Response:', response.data);
 
-      const userData = response.data.user;
-      console.log('User Data:', userData);
-      const token = response.data.token;  // Assuming response has user data
 
-      // Check if the response contains a token and user data
-      if (userData && token) {
-        console.log('User Data from API:', userData); 
-        setUser(userData); // Update the user in context
-        localStorage.setItem('token', token); // Store the token
-        navigate('/'); // Redirect to the home page after successful login
+      if (response.data.user && response.data.token) {
+        login(response.data);
+        console.log(response) // Use login function from context to update state and localStorage
+        navigate('/'); // Redirect to home page after successful login
       } else {
-        setError('No token or user data received. Please check your credentials.');
+        setError('Login failed. No user or token received.');
       }
     } catch (err) {
-      // Improved error handling based on response
       if (err.response && err.response.status === 401) {
-        setError('Invalid email or password. Please try again.');
+        setError('Invalid email or password.');
       } else {
         setError('Login failed. Please try again later.');
       }
-      console.error(err); // Log the error for debugging
     } finally {
       setLoading(false);
     }

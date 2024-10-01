@@ -7,6 +7,7 @@ const Register = () => {
     name: '',  // Update 'username' to 'name'
     email: '',
     password: '',
+    imageUrl: 'no_dp',
   });
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
