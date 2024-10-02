@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Base_url } from '../api';
 
 const SinglePost = () => {
   const { id } = useParams(); // Get the post ID from the URL
@@ -14,7 +15,7 @@ const SinglePost = () => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const response = await axios.get('http://localhost:8000/api/accounts/user/', {
+        const response = await axios.get(`${Base_url}accounts/user/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -27,7 +28,7 @@ const SinglePost = () => {
 
     const fetchPost = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/accounts/postsviews/${id}/`);
+        const response = await axios.get(`${Base_url}accounts/postsviews/${id}/`);
         setPost(response.data);
         console.log(response.data)
       } catch (err) {
@@ -46,7 +47,7 @@ const SinglePost = () => {
     if (window.confirm('Are you sure you want to delete this post?')) { // Confirmation before delete
       try {
         const token = localStorage.getItem('authToken');
-        await axios.delete(`http://localhost:8000/api/accounts/postsviews/${id}/delete/`, {
+        await axios.delete(`${Base_url}accounts/postsviews/${id}/delete/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

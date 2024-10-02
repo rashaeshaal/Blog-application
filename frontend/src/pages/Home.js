@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { Base_url } from '../api';
 
 const Home = () => {
   const [posts, setPosts] = useState([]);
@@ -14,7 +15,7 @@ const Home = () => {
     const fetchPosts = async () => {
       setLoading(true); // Start loading when page changes
       try {
-        const response = await axios.get(`http://localhost:8000/api/accounts/postsviews/?page=${currentPage}`);
+        const response = await axios.get(`${Base_url}accounts/postsviews/?page=${currentPage}`);
         setPosts(response.data.results || []);
         const totalPosts = response.data.count;
         setTotalPages(Math.ceil(totalPosts / postsPerPage));

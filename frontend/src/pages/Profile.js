@@ -3,6 +3,7 @@ import { useUser } from '../context/UserContext'; // Adjust the path according t
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import nodp from '../assets/no-dp_16.webp';
+import { Base_url } from '../api';
 
 const Profile = () => {
   const { user, updateUser } = useUser();
@@ -21,7 +22,7 @@ const Profile = () => {
 
     const fetchProfileData = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/accounts/profiles/', {
+        const response = await axios.get(`${Base_url}accounts/profiles/`, {
           headers: {
             'Authorization': `Bearer ${user?.token}`, // Optional chaining to safely access the token
           },
@@ -65,7 +66,7 @@ const Profile = () => {
         formData.append('profile_picture', updatedData.profile_picture);
       }
 
-      const response = await axios.patch('http://localhost:8000/api/accounts/profiles/', formData, {
+      const response = await axios.patch(`${Base_url}accounts/profiles/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${user?.token}`, // Optional chaining for token
@@ -96,7 +97,7 @@ const Profile = () => {
 
   // Construct the profile picture URL
   const profilePictureUrl = profileData?.profile_picture
-    ? `http://localhost:8000${profileData?.profile_picture}` // Optional chaining for profile_picture
+    ? `${Base_url}${profileData?.profile_picture}` // Optional chaining for profile_picture
     : nodp; // Use a default image if none exists
 
   return (

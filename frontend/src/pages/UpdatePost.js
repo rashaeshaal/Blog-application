@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Base_url } from '../api';
 
 const EditPost = () => {
   const { id } = useParams(); // Get post ID from URL
@@ -12,7 +13,7 @@ const EditPost = () => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/accounts/postsviews/${id}/`);
+        const response = await axios.get(`${Base_url}accounts/postsviews/${id}/`);
         setPost(response.data); // Fill the form with existing data
       } catch (err) {
         setError('Failed to fetch post data');
@@ -35,7 +36,7 @@ const EditPost = () => {
         formData.append('image', post.image);
       }
 
-      await axios.patch(`http://localhost:8000/api/accounts/postsviews/${id}/update/`, formData, {
+      await axios.patch(`${Base_url}accounts/postsviews/${id}/update/`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

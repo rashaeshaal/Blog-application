@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
+import { Base_url } from '../api';
 const CreatePost = () => {
   const { user } = useUser();
   const [title, setTitle] = useState('');
@@ -28,7 +29,7 @@ const CreatePost = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:8000/api/accounts/posts/',
+        `${Base_url}accounts/posts/`,
         formData,
         {
           headers: {

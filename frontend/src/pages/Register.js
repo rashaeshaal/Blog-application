@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Base_url } from '../api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -30,7 +31,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8000/api/accounts/register/', formData);
+      const response = await axios.post(`${Base_url}accounts/register/`, formData);
       console.log('Registration successful:', response.data);
       setSuccessMessage('Registration successful! Redirecting to login...');
       setFormData({ name: '', email: '', password: '' }); // Clear form fields

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useUser } from '../context/UserContext';
+import { Base_url } from '../api';
 
 const PostList = () => {
   const { user } = useUser();
@@ -12,7 +13,7 @@ const PostList = () => {
 
   const fetchPosts = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/posts/?page=${page}`, {
+      const response = await axios.get(`${Base_url}posts/?page=${page}`, {
         headers: {
           'Authorization': `Bearer ${user.token}`,
         },

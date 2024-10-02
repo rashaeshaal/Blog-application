@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext'; // Import the User context
 import axios from 'axios';
+import { Base_url } from '../api';
 
 const Login = () => {
   const { login } = useUser();  // Use the login function from context
@@ -21,7 +22,7 @@ const Login = () => {
     setError(null);
 
     try {
-      const response = await axios.post('http://localhost:8000/api/accounts/handlelogin/', formData);
+      const response = await axios.post(`${Base_url}accounts/handlelogin/`, formData);
 
 
       if (response.data.user && response.data.token) {

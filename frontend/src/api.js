@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+export const Base_url = 'http://localhost:8000/api/'
+
 // Define the base URL for your Django backend
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api'; // Update this URL if necessary
+const API_URL = process.env.REACT_APP_API_URL || Base_url; // Update this URL if necessary
 
 // Function to fetch all blog posts from the backend
 export const fetchBlogPosts = async () => {
