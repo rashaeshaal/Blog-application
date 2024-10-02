@@ -98,7 +98,7 @@ ROOT_URLCONF = 'blogproject.urls'
 # ]
 
 
-# Serve React frontend as templates
+# Serve React frontend as templates changes
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
