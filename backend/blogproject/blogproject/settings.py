@@ -21,9 +21,11 @@ load_dotenv()
 # BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+print,(BASE_DIR,"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhtttttttttttttttttttttttttttttttttttttttttttttttttttttttttt")
+
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'frontend', 'build', 'static'),
+    os.path.join('home/ubuntu/Blog-application', 'frontend', 'build', 'static'),
 ]
 
 # Quick-start development settings - unsuitable for production
