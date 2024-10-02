@@ -21,7 +21,7 @@ const SinglePost = () => {
         });
         setUserId(response.data.id); // Assuming the API returns user ID
       } catch (err) {
-        console.error('Failed to fetch user data');
+        console.error('Failed to fetch user data:', err.message); // Log the error message
       }
     };
 
@@ -29,8 +29,10 @@ const SinglePost = () => {
       try {
         const response = await axios.get(`http://localhost:8000/api/accounts/postsviews/${id}/`);
         setPost(response.data);
+        console.log(response.data)
       } catch (err) {
         setError('Failed to fetch post data');
+        console.error('Error fetching post:', err.message); // Log the error message
       } finally {
         setLoading(false); // Set loading to false whether the fetch was successful or not
       }
@@ -41,16 +43,19 @@ const SinglePost = () => {
   }, [id]);
 
   const handleDelete = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      await axios.delete(`http://localhost:8000/api/accounts/postsviews/${id}/delete/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      navigate('/'); // Redirect to home after successful deletion
-    } catch (err) {
-      setError('Failed to delete post');
+    if (window.confirm('Are you sure you want to delete this post?')) { // Confirmation before delete
+      try {
+        const token = localStorage.getItem('authToken');
+        await axios.delete(`http://localhost:8000/api/accounts/postsviews/${id}/delete/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        navigate('/'); // Redirect to home after successful deletion
+      } catch (err) {
+        setError('Failed to delete post');
+        console.error('Error deleting post:', err.message);
+      }
     }
   };
 
@@ -64,13 +69,13 @@ const SinglePost = () => {
       <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
       {post.image && (
         <img
-          src={`http://localhost:8000${post.image}`}
+          src={post.image}  // Corrected to use the variable directly
           alt={post.title}
           className="w-full h-64 object-cover mb-4 rounded-lg"
         />
       )}
       <p className="text-gray-700 mb-4">{post.content}</p>
-      {post.userId === userId && ( // Check if the current user is the author of the post
+      {post.user === userId && ( // Check if the current user is the author of the post
         <>
           <button
             onClick={handleDelete}

@@ -84,7 +84,7 @@ target/
 *.pyc
 _pycache_/
 local_settings.py
-
+.venv
 .env
 db.sqlite3
 *.pyc

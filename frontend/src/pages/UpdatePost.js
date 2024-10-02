@@ -2,73 +2,107 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 
-const UpdatePost = () => {
-  const { id } = useParams(); // Get the post ID from the URL
-  const navigate = useNavigate(); // For navigation after update
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+const EditPost = () => {
+  const { id } = useParams(); // Get post ID from URL
+  const navigate = useNavigate(); // For navigation after editing
+  const [post, setPost] = useState({ title: '', content: '', image: null }); // Post state
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  
   useEffect(() => {
-    // Fetch the post data to pre-fill the form
     const fetchPost = async () => {
       try {
         const response = await axios.get(`http://localhost:8000/api/accounts/postsviews/${id}/`);
-        setTitle(response.data.title);
-        setContent(response.data.content);
+        setPost(response.data); // Fill the form with existing data
       } catch (err) {
         setError('Failed to fetch post data');
+        console.error('Error:', err.message);
+      } finally {
+        setLoading(false);
       }
     };
     fetchPost();
   }, [id]);
 
-  const handleUpdate = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Get the token from localStorage
-    const token = localStorage.getItem('authToken');
-    
     try {
-      await axios.put(`http://localhost:8000/api/accounts/postsviews/${id}/update/`, {
-        title,
-        content,
-      }, {
+      const token = localStorage.getItem('authToken');
+      const formData = new FormData();
+      formData.append('title', post.title);
+      formData.append('content', post.content);
+      if (post.image) {
+        formData.append('image', post.image);
+      }
+
+      await axios.patch(`http://localhost:8000/api/accounts/postsviews/${id}/update/`, formData, {
         headers: {
-          'Authorization': `Bearer ${token}`  // Pass the token in the Authorization header
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
       });
-      navigate(`/posts/${id}`); // Redirect to the single post view after updating
+      navigate(`/posts/${id}/`); // Redirect to the updated post
     } catch (err) {
       setError('Failed to update post');
+      console.error('Error updating post:', err.message);
     }
   };
 
+  const handleChange = (e) => {
+    setPost({
+      ...post,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleImageChange = (e) => {
+    setPost({
+      ...post,
+      image: e.target.files[0]
+    });
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-4">Update Post</h1>
-      {error && <p className="text-red-500">{error}</p>}
-      <form onSubmit={handleUpdate}>
+      <h1 className="text-4xl font-bold mb-4">Edit Post</h1>
+      <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label className="block text-gray-700">Title:</label>
+          <label className="block text-gray-700 text-sm font-bold mb-2">Title</label>
           <input
             type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="mt-1 block w-full border border-gray-300 rounded p-2"
+            name="title"
+            value={post.title}
+            onChange={handleChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
             required
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700">Content:</label>
+          <label className="block text-gray-700 text-sm font-bold mb-2">Content</label>
           <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="mt-1 block w-full border border-gray-300 rounded p-2"
+            name="content"
+            value={post.content}
+            onChange={handleChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
             required
           />
         </div>
-        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">Image</label>
+          <input
+            type="file"
+            name="image"
+            onChange={handleImageChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
           Update Post
         </button>
       </form>
@@ -76,4 +110,4 @@ const UpdatePost = () => {
   );
 };
 
-export default UpdatePost;
+export default EditPost;

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '../context/UserContext';
-
-const CreatePost = ({ onPostCreated }) => { // Accept onPostCreated as a prop
+import { useNavigate } from 'react-router-dom';
+const CreatePost = () => {
   const { user } = useUser();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -10,10 +10,14 @@ const CreatePost = ({ onPostCreated }) => { // Accept onPostCreated as a prop
   const [image, setImage] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-
+  const navigate=useNavigate()
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
+    // Clear previous messages
+    setErrorMessage('');
+    setSuccessMessage('');
+
     const formData = new FormData();
     formData.append('title', title);
     formData.append('content', content);
@@ -21,9 +25,9 @@ const CreatePost = ({ onPostCreated }) => { // Accept onPostCreated as a prop
     if (image) {
       formData.append('image', image);
     }
-  
+
     try {
-      await axios.post(
+      const response = await axios.post(
         'http://localhost:8000/api/accounts/posts/',
         formData,
         {
@@ -33,18 +37,26 @@ const CreatePost = ({ onPostCreated }) => { // Accept onPostCreated as a prop
           },
         }
       );
-      setSuccessMessage('Post created successfully!');
-      onPostCreated(); // Notify the parent to refetch posts
-      setTitle('');
-      setContent('');
-      setTags('');
-      setImage(null);
+
+      if (response.status === 201) {
+        console.log(response.status)
+        setSuccessMessage('Post created successfully!');
+        setTitle('');
+        setContent('');
+        setTags('');
+        setImage(null);
+        navigate('/')
+      } else {
+        setErrorMessage('Failed to create post. Please try again.');
+      }
     } catch (error) {
-      setErrorMessage('Failed to create post. Please try again.');
-      console.error('Failed to create post:', error.response?.data);
+      // Show specific error messages if provided by the server
+      const errorMsg = error.response?.data?.detail || 'Failed to create post. Please try again.';
+      setErrorMessage(errorMsg);
+      console.error('Failed to create post:', errorMsg);
     }
   };
-  
+
   return (
     <div className="container mx-auto p-8 bg-white rounded-lg shadow-lg">
       <h1 className="text-3xl font-semibold mb-6">Create a New Post</h1>
