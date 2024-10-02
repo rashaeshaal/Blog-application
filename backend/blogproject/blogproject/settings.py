@@ -25,7 +25,7 @@ print,(BASE_DIR,"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhttttttttttttttttttt
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join('home/ubuntu/Blog-application', 'frontend', 'build', 'static').replace('\\', '/')
+      os.path.join(BASE_DIR, '..','..', 'frontend', 'build', 'static').replace('\\', '/')
 ]
 
 # Quick-start development settings - unsuitable for production
@@ -105,7 +105,7 @@ ROOT_URLCONF = 'blogproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join('home/ubuntu/Blog-application', 'frontend', 'build').replace('\\', '/')],
+        'DIRS': [os.path.join(BASE_DIR, '..','..', 'frontend', 'build').replace('\\', '/')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
